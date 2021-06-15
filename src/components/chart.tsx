@@ -1,52 +1,83 @@
 import { ApexOptions } from 'apexcharts'
 import ReactApexChart from 'react-apexcharts'
+import lodash from 'lodash'
+import { Data, DataData, DataSpan, DataStart } from '../App'
 
-const options: ApexOptions = {
-  tooltip: {
-    enabled: false
-  },
-  chart: {
-    id: "basic-bar",
-    zoom: {
+
+export default function Chart({ chartdata }: { chartdata: Data[] }) {
+  const [dateItem] = chartdata.filter((it) => it.type === "span") as DataSpan[]
+
+  const options: ApexOptions = {
+    tooltip: {
       enabled: false
     },
-    
-  },
-  xaxis: {
-    categories: [1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998],
-    labels: {
+    chart: {
+      id: "basic-bar",
+      zoom: {
+        enabled: false
+      },
+
+    },
+    xaxis: {
+      categories: [
+        new Date(dateItem.begin).toDateString(),
+        new Date(dateItem.end).toDateString(),
+      ],
+      title: {
+        text: "date/time"
+      }
+    },
+    yaxis: {
+      min: 0,
+      title: {
+        text: "response time"
+      }
+    },
+    grid: {
       show: false,
     }
-  },
-  yaxis: {
-    min: 0,
-    max: 1,
-    tickAmount: 5,
-  },
-  grid: {
-    show: false,
   }
-}
 
- const series = [ {
-      name: "series-1",
-      data: [0.3, 0.4, 0.45, 0.5, 0.49, 0.6, 0.7, 0.9]
-    },
-    {
-    name: "asdf",
-      data: [0.1, 0.6]
-    }
-  ]
+  const header = lodash.first(chartdata.filter((it) => it.type === "start") as DataStart[]);
 
+  if (!header) {
+    throw new Error("Missing start event");
+  }
 
-export default function Chart() {
+  const data = chartdata.filter((it) => it.type === "data");
+
+  const groups = lodash.groupBy(data, (item: DataData) => {
+    const key: Array<string> = [];
+
+    header.group.forEach((group) => {
+      key.push(item[group]);
+    });
+
+    return key.join("/");
+  });
+
+  const getGraph = (prop: string) =>
+    lodash.map(groups, (value, key) => ({
+      data: value.map((it: any) => (it[prop])),
+      name: key
+    }),
+    );
+
+  const series = lodash.flatMap(header.select.map((select: string) =>
+    getGraph(select).map((it) => (
+      {
+        ...it,
+        name: `${it.name} (${select})`,
+      }))
+  ))
+
   return (
     <ReactApexChart
       options={options}
       series={series}
       type="line"
-      height="250px"
-      style={{width: '100%'}}
+      height="350px"
+      style={{ width: '100%' }}
     />
   )
 }
