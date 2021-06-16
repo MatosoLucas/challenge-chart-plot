@@ -1,4 +1,4 @@
-import { Box, Flex, Button } from '@chakra-ui/react'
+import { Box, Flex, Button, Text } from '@chakra-ui/react'
 import placeholder from './components/data.json'
 import Chart from './components/chart';
 import JSONInput from 'react-json-editor-ajrm';
@@ -53,11 +53,11 @@ function App() {
   }
 
   return (
-    <Box>
+    <Flex flexDirection="column" minHeight="100vh">
       <Flex p={22} bg="gray.300">
         <Box fontSize="28px">Lucas Challenge</Box>
       </Flex>
-      <Flex>
+      <Flex >
         <JSONInput
           id='a_unique_id'
           placeholder={placeholder}
@@ -69,14 +69,17 @@ function App() {
         />
       </Flex>
       <Flex p={6}>
-        <ErrorBoundary fallback={<p>Error</p>}>
+        <ErrorBoundary fallback={
+        <Box w="100%" h="350px" textAlign="center">
+          <Text p={12} fontSize="28px"> Something went wrong while plotting your graph! Check your data! </Text>
+        </Box>}>
           <Chart chartdata={data} />
         </ErrorBoundary>
       </Flex>
-      <Flex p={6} bottom="0" w="100%" bg="gray.300">
+      <Flex p={6} bottom="0" w="100%" bg="gray.300" mt="auto">
         <Button onClick={handleGenerate} colorScheme="blue">GENERATE CHART</Button>
       </Flex>
-    </Box>
+    </Flex>
   )
 }
 

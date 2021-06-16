@@ -1,50 +1,32 @@
 import { ApexOptions } from 'apexcharts'
 import ReactApexChart from 'react-apexcharts'
 import lodash from 'lodash'
-import { Data, DataData, DataSpan, DataStart } from '../App'
+import { Data, DataData, DataEnd, DataSpan, DataStart } from '../App'
+import { useToast } from '@chakra-ui/react';
 
 
 export default function Chart({ chartdata }: { chartdata: Data[] }) {
-  const [dateItem] = chartdata.filter((it) => it.type === "span") as DataSpan[]
 
-  const options: ApexOptions = {
-    tooltip: {
-      enabled: false
-    },
-    chart: {
-      id: "basic-bar",
-      zoom: {
-        enabled: false
-      },
-
-    },
-    xaxis: {
-      categories: [
-        new Date(dateItem.begin).toDateString(),
-        new Date(dateItem.end).toDateString(),
-      ],
-      title: {
-        text: "date/time"
-      }
-    },
-    yaxis: {
-      min: 0,
-      title: {
-        text: "response time"
-      }
-    },
-    grid: {
-      show: false,
-    }
-  }
+  const toast = useToast()
 
   const header = lodash.first(chartdata.filter((it) => it.type === "start") as DataStart[]);
 
   if (!header) {
-    throw new Error("Missing start event");
+    throw toast({ title: "Missing a start event!", status: "error", isClosable: true, duration: 9000 });
   }
 
-  const data = chartdata.filter((it) => it.type === "data");
+  const [endItem] = chartdata.filter((it) => it.type === 'end') as DataEnd[]
+
+  const normalCategory = [new Date(header.timestamp).toDateString(), new Date(endItem.timestamp).toDateString()]
+
+  const [dateItem] = chartdata.filter((it) => it.type === "span") as DataSpan[]
+
+  let data: Data[] = []
+
+  if (dateItem) {
+    data = chartdata.filter((it) => it.type === "data" && it.timestamp >= dateItem.begin && it.timestamp <= dateItem.end);
+  }
+  else data = chartdata.filter((it) => it.type === "data");
 
   const groups = lodash.groupBy(data, (item: DataData) => {
     const key: Array<string> = [];
@@ -63,6 +45,7 @@ export default function Chart({ chartdata }: { chartdata: Data[] }) {
     }),
     );
 
+
   const series = lodash.flatMap(header.select.map((select: string) =>
     getGraph(select).map((it) => (
       {
@@ -70,6 +53,35 @@ export default function Chart({ chartdata }: { chartdata: Data[] }) {
         name: `${it.name} (${select})`,
       }))
   ))
+
+  const spanCategory = dateItem ? [new Date(dateItem.begin).toDateString(), new Date(dateItem.end).toDateString()] : null
+
+  const options: ApexOptions = {
+    tooltip: {
+      enabled: false
+    },
+    chart: {
+      id: "basic-bar",
+      zoom: {
+        enabled: false
+      },
+    },
+    xaxis: {
+      categories: dateItem ? spanCategory : normalCategory,
+      title: {
+        text: "date/time"
+      }
+    },
+    yaxis: {
+      min: 0,
+      title: {
+        text: "response time"
+      }
+    },
+    grid: {
+      show: false,
+    }
+  }
 
   return (
     <ReactApexChart
