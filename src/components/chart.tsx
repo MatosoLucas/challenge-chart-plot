@@ -1,6 +1,6 @@
 import { ApexOptions } from 'apexcharts'
 import ReactApexChart from 'react-apexcharts'
-import lodash from 'lodash'
+import lodash, { findLastIndex } from 'lodash'
 import { Data, DataData, DataEnd, DataSpan, DataStart } from '../App'
 import { useToast } from '@chakra-ui/react';
 
@@ -9,13 +9,17 @@ export default function Chart({ chartdata }: { chartdata: Data[] }) {
 
   const toast = useToast()
 
-  const header = lodash.first(chartdata.filter((it) => it.type === "start") as DataStart[]);
+  const lastStartIndex = findLastIndex(chartdata, ['type', 'start'])
+
+  console.log(lastStartIndex);
+
+  const header = chartdata.find((it) => it.type === "start") as DataStart
 
   if (!header) {
-    throw toast({ title: "Missing a start event!", status: "error", isClosable: true, duration: 9000 });
+    throw toast({ title: "Missing a start event!", isClosable: true, duration: 9000 });
   }
 
-  const [endItem] = chartdata.filter((it) => it.type === 'end') as DataEnd[]
+  const endItem = chartdata.find((it) => it.type === 'end') as DataEnd
 
   const normalCategory = [new Date(header.timestamp).toDateString(), new Date(endItem.timestamp).toDateString()]
 
@@ -44,7 +48,6 @@ export default function Chart({ chartdata }: { chartdata: Data[] }) {
       name: key
     }),
     );
-
 
   const series = lodash.flatMap(header.select.map((select: string) =>
     getGraph(select).map((it) => (
@@ -88,7 +91,7 @@ export default function Chart({ chartdata }: { chartdata: Data[] }) {
       options={options}
       series={series}
       type="line"
-      height="350px"
+      height="100%"
       style={{ width: '100%' }}
     />
   )

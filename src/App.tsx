@@ -5,17 +5,6 @@ import JSONInput from 'react-json-editor-ajrm';
 import locale from 'react-json-editor-ajrm/locale/en';
 import { useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-// export interface Data {
-//   type: string,
-//   select?: Array<string>
-//   group?: Array<string>
-//   os?: string,
-//   browser?: string,
-//   min_response_time?: number,
-//   max_response_time?: number,
-//   begin?: number,
-//   end?: number,
-// }
 
 export type DataStart = {
   type: 'start',
@@ -47,6 +36,7 @@ export type Data = DataStart | DataSpan | DataData | DataEnd
 function App() {
   const [data, setData] = useState<Data[]>(placeholder as Data[])
   const [inputData, setInputData] = useState<Data[]>(placeholder as Data[])
+  console.log(inputData)
 
   const handleGenerate = () => {
     setData(inputData)
@@ -68,11 +58,12 @@ function App() {
           waitAfterKeyPress={2000}
         />
       </Flex>
-      <Flex p={6}>
-        <ErrorBoundary fallback={
-        <Box w="100%" h="350px" textAlign="center">
-          <Text p={12} fontSize="28px"> Something went wrong while plotting your graph! Check your data! </Text>
-        </Box>}>
+      <Flex p={6} h="350px">
+        <ErrorBoundary resetKeys={[data]} fallback={
+          <Box w="100%" h="350px" textAlign="center">
+            <Text p={12} fontSize="28px"> Something went wrong while plotting your graph! Check your data! </Text>
+          </Box>}
+        >
           <Chart chartdata={data} />
         </ErrorBoundary>
       </Flex>
